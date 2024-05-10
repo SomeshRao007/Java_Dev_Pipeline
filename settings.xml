@@ -1,0 +1,7 @@
+<servers>
+   <server>
+      <id>nexus-snapshots</id>
+      <username>deployment</username>
+      <password>admin123</password>
+   </server>
+</servers>
