@@ -4,7 +4,7 @@
   <groupId>com.mycompany.app</groupId>
   <artifactId>my-app</artifactId>
   <packaging>war</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <name>my-app</name>
   <url>http://maven.apache.org</url>
   <dependencies>
@@ -51,7 +51,12 @@
         <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-war-plugin</artifactId>
-              <version>3.3.2</version> <!-- Update to the latest version if needed -->
+	      <version>3.3.2</version> <!-- Update to the latest version if need> -->
+	      <configuration>
+		      <warSourceDirectory>src/main/webapp</warSourceDirectory>
+		      <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
+	      </configuration>
+
         </plugin>
 
         <plugin>
@@ -125,10 +130,17 @@
   </build>
 
   <distributionManagement>
-   <snapshotRepository>
-      <id>nexus-snapshots</id>
-      <url>http://13.235.54.14:8081/repository/maven-snapshots</url>
-   </snapshotRepository>
+	  <repository>
+		  <id>nexus-releases</id>
+		  <name>Nexus Release Repository</name>
+		  <url>http://13.235.54.14:8081/repository/maven-releases/</url>
+		  </repository>
+
+
+   	<snapshotRepository>
+     		 <id>nexus-snapshots</id>
+		 <url>http://13.235.54.14:8081/repository/maven-snapshots/</url>
+   	</snapshotRepository>
   </distributionManagement>
 
 </project>
