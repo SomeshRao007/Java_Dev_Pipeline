@@ -11,7 +11,7 @@ stages:
 
 cache:
   paths:
-    - .m2/repository
+    # - .m2/repository
     - target
 
 sonarqube-check:
