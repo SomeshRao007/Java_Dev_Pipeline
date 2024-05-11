@@ -109,7 +109,7 @@
           <version>3.9.1.2184</version>
         </plugin>
 
-        <!-- <plugin>
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
           <version>3.0.0-M3</version>
@@ -128,7 +128,7 @@
               </configuration>
             </execution>
           </executions>
-        </plugin> -->
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
