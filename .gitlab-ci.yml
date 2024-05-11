@@ -33,11 +33,12 @@ maven-build:
   stage: build
   script:
     - 'mvn package'
+    - 'mvn deploy'
   artifacts:
     paths:
       - target/*.war
 
-nexus-deploy:
+. nexus-deploy:
   stage: deploy
   script:
     - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
