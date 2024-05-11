@@ -34,9 +34,7 @@ maven-build:
   script:
     - 'mvn package'
     - 'mvn deploy'
-  artifacts:
-    paths:
-      - target/*.war
+
 
 . nexus-deploy:
   stage: deploy
