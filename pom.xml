@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.mycompany.app</groupId>
   <artifactId>my-app</artifactId>
-  <packaging>war</packaging>
+  <packaging>jar</packaging>
   <version>1.0</version>
   <name>my-app</name>
   <url>http://maven.apache.org</url>
@@ -79,7 +79,6 @@
           <artifactId>maven-deploy-plugin</artifactId>
           <version>3.1.0</version>
           <configuration>
-            <skip>true</skip>
           </configuration>
         </plugin>
 
