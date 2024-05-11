@@ -16,7 +16,8 @@
     </dependency>
   </dependencies>
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	  <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
   </properties>
   <build>
     <pluginManagement>
@@ -137,13 +138,13 @@
 	  <repository>
 		  <id>nexus-releases</id>
 		  <name>Nexus Release Repository</name>
-		  <url>http://13.235.54.14:8081/repository/maven-releases/</url>
+		  <url>http://65.2.55.223:081/repository/maven-releases/</url>
 		  </repository>
 
 
    	<snapshotRepository>
      		 <id>nexus-snapshots</id>
-		 <url>http://13.235.54.14:8081/repository/maven-snapshots/</url>
+		 <url>http://65.2.55.223:8081/repository/maven-snapshots/</url>
    	</snapshotRepository>
   </distributionManagement>
 
