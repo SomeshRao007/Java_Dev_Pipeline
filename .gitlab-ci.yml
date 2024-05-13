@@ -41,10 +41,10 @@ nexus-deploy:
   stage: deploy
   script:
     - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
-  # environment:
-  #   MAVEN_SETTINGS_XML: "/path/to/settings.xml"
-  #   NEXUS_USER: "$NEXUS_USER"
-  #   NEXUS_PASS: "$NEXUS_PASS"
+  environment:
+    MAVEN_SETTINGS_XML: "${CI_PROJECT_DIR}/settings.xml"
+    NEXUS_USER: "$NEXUS_USER"
+    NEXUS_PASS: "$NEXUS_PASS"
   dependencies:
     - maven-build
 
