@@ -36,7 +36,7 @@ maven-build:
     - 'mvn deploy'
 
 
-. nexus-deploy:
+nexus-deploy:
   stage: deploy
   script:
     - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
