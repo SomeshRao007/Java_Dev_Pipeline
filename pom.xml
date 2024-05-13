@@ -75,9 +75,9 @@
           <configuration>
             <serverId>nexus</serverId>
             <nexusUrl>http://3.110.70.113:8081/nexus/</nexusUrl>
-            <repository>http://3.110.70.113:8081/repository/maven-releases/</repository>
+            <!-- <repository>http://3.110.70.113:8081/repository/maven-releases/</repository>
             <username>Testusr</username>
-            <password>test123</password>
+            <password>test123</password> -->
             <skipStaging>true</skipStaging>
           </configuration>
         </plugin>
@@ -101,9 +101,6 @@
           <configuration>
             <serverId>nexus</serverId>
             <nexusUrl>http://3.110.70.113:8081/nexus/</nexusUrl>
-            <repository>http://3.110.70.113:8081/repository/maven-releases/</repository>
-            <username>Testusr</username>
-            <password>test123</password>
             <skipStaging>true</skipStaging>
           </configuration>
         </plugin>
