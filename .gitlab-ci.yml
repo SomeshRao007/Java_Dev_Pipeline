@@ -1,8 +1,11 @@
 variables:
-  MAVEN_OPTS: -Dmaven.repo.local=.m2/repository
+  MAVEN_OPTS: -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+  
   
 
-image: maven:latest
+image: maven:3.9.2-eclipse-temurin-17-alpine
+  
+# maven:latest
 
 stages:
     - build
