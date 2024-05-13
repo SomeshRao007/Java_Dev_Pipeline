@@ -1,7 +1,7 @@
 variables:
-  # MAVEN_OPTS: -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+  MAVEN_OPTS: -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
   #  MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
-   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  #  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
   
   
 
@@ -49,8 +49,8 @@ maven-build:
 nexus-deploy:
   stage: deploy
   script:
-    # - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
-    - 'mvn $MAVEN_OPTS deploy -Dmaven.test.skip=true'
+    - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
+    # - 'mvn $MAVEN_OPTS deploy -Dmaven.test.skip=true'
 
 
   # environment:
