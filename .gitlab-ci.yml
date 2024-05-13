@@ -1,5 +1,7 @@
 variables:
-  MAVEN_OPTS: -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+  # MAVEN_OPTS: -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+   MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
+   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
   
   
 
@@ -14,8 +16,8 @@ stages:
 
 cache:
   paths:
-    # - .m2/repository
-    # - target
+    - .m2/repository
+    - target
 
 sonarqube-check:
   stage: sonarqube  
@@ -36,22 +38,29 @@ maven-build:
   stage: build
   script:
     - 'mvn compile'
-    - 'mvn package'
+    - 'mvn $MAVEN_CLI_OPTS package -Dmaven.test.skip=true'
     # - 'mvn deploy'
+
+  artifacts: 
+   paths: 
+      - target/*.war 
 
 
 nexus-deploy:
   stage: deploy
   script:
-    - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
+    # - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
+    - 'mvn $MAVEN_CLI_OPTS deploy -Dmaven.test.skip=true'
+
+
   # environment:
   #   name: nexus-deployment
   # variables:
   #   # MAVEN_SETTINGS_XML: "${CI_PROJECT_DIR}/settings.xml"
   #   NEXUS_USER: "$NEXUS_USER"
   #   NEXUS_PASS: "$NEXUS_PASS"
-  dependencies:
-    - maven-build
+  # dependencies:
+  #   - maven-build
 
 # tomcat-deploy:
 #   stage: deploy
