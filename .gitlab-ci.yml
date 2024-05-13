@@ -32,6 +32,7 @@ sonarqube-check:
 maven-build:
   stage: build
   script:
+    - 'mvn compile'
     - 'mvn package'
     # - 'mvn deploy'
 
