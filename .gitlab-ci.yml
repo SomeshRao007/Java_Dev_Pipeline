@@ -33,7 +33,7 @@ maven-build:
   stage: build
   script:
     - 'mvn package'
-    - 'mvn deploy'
+    # - 'mvn deploy'
 
 
 nexus-deploy:
