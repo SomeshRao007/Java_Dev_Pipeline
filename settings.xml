@@ -1,8 +1,8 @@
 <servers>
    <server>
       <id>nexus-snapshots</id>
-      <username>${NEXUS_USER}</username>
-      <password>${NEXUS_PASS}</password>
+      <username>$NEXUS_USER</username>
+      <password>$NEXUS_PASS</password>
    </server>
 
    <server>
