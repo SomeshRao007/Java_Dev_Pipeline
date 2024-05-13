@@ -43,6 +43,7 @@ nexus-deploy:
     - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
   environment:
     name: nexus-deployment
+  variables:
     MAVEN_SETTINGS_XML: "${CI_PROJECT_DIR}/settings.xml"
     NEXUS_USER: "$NEXUS_USER"
     NEXUS_PASS: "$NEXUS_PASS"
