@@ -1,13 +1,13 @@
 <servers>
    <server>
       <id>nexus-snapshots</id>
-      <username>admin</username>
-      <password>admin123</password>
+      <username>$NEXUS_USER</username>
+      <password>$NEXUS_PASS</password>
    </server>
 
    <server>
         <id>nexus-releases</id>
-        <username>admin</username>
-        <password>admin123</password>
+        <username>$NEXUS_USER</username>
+        <password>$NEXUS_PASS</password>
     </server>
 </servers>
