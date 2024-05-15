@@ -17,9 +17,6 @@ cache:
 
 build_job:
   stage: build
-  tags:
-    - docker 
-
   script: 
     - echo "Maven compile started"
     - "mvn compile"
@@ -27,18 +24,12 @@ build_job:
 
 test_job:
   stage: test
-  tags:
-    - docker 
-
   script: 
     - echo "Maven test started"
     - "mvn test"
 
 package_job:
   stage: package
-  tags:
-    - docker 
-
   script: 
     - echo "Maven packaging started"
     - "mvn package"
@@ -46,8 +37,5 @@ package_job:
 
 Deploy_job:
   stage: deploy
-  tags:
-    - docker 
-
   script: 
     - echo "Maven deploy started"
