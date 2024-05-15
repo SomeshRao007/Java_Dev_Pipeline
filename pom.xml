@@ -52,12 +52,11 @@
         <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-war-plugin</artifactId>
-	      <version>3.3.2</version> <!-- Update to the latest version if need> -->
-	      <configuration>
-		      <warSourceDirectory>src/main/webapp</warSourceDirectory>
-		      <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
-	      </configuration>
-
+	            <version>3.3.2</version> <!-- Update to the latest version if need> -->
+	            <configuration>
+		            <warSourceDirectory>src/main/webapp</warSourceDirectory>
+		            <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
+	            </configuration>
         </plugin>
 
         <plugin>
@@ -72,14 +71,6 @@
               </goals>
             </execution>
           </executions>
-          <configuration>
-            <serverId>nexus</serverId>
-            <nexusUrl>http://3.110.70.113:8081/nexus/</nexusUrl>
-            <!-- <repository>http://3.110.70.113:8081/repository/maven-releases/</repository>
-            <username>Testusr</username>
-            <password>test123</password> -->
-            <skipStaging>true</skipStaging>
-          </configuration>
         </plugin>
 
 
@@ -100,7 +91,7 @@
           </executions>
           <configuration>
             <serverId>nexus</serverId>
-            <nexusUrl>http://3.110.70.113:8081/nexus/</nexusUrl>
+            <nexusUrl>http://3.110.180.206:8081/nexus/</nexusUrl>
             <skipStaging>true</skipStaging>
           </configuration>
         </plugin>
@@ -139,13 +130,13 @@
 	  <repository>
 		  <id>nexus-releases</id>
 		  <name>Nexus Release Repository</name>
-		  <url>http://3.110.70.113:8081/repository/maven-releases/</url>
+		  <url>http://3.110.180.206:8081/repository/maven-releases/</url>
 		  </repository>
 
 
    	<snapshotRepository>
      		 <id>nexus-snapshots</id>
-		 <url>http://3.110.70.113:8081/repository/maven-snapshots/</url>
+		 <url>http://3.110.180.206:8081/repository/maven-snapshots/</url>
    	</snapshotRepository>
   </distributionManagement>
 
