@@ -1,70 +1,53 @@
 variables:
-  MAVEN_OPTS: -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
-  #  MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
-  #  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
-  
-  
+  MAVEN_OPTS: -Dmaven.repo.local=.m2/repository
 
-image: maven:3.9.2-eclipse-temurin-17-alpine
-  
-# maven:latest
+image: maven:latest
 
 stages:
     - build
+    - test
+    - package
     - deploy
-    - sonarqube
+
 
 cache:
   paths:
     - .m2/repository
     - target
 
-sonarqube-check:
-  stage: sonarqube  
-  variables:
-    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
-    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
-  cache:
-    key: "${CI_JOB_NAME}"
-    paths:
-      - .sonar/cache
-  script: 
-    - mvn verify sonar:sonar -Dsonar.projectKey=Sonar-maven
-  allow_failure: true
-  only:
-    - main
-
-maven-build:
+build_job:
   stage: build
-  script:
-    - 'mvn compile'
-    - 'mvn $MAVEN_OPTS package -Dmaven.test.skip=true'
-    # - 'mvn deploy'
+  tags:
+    - docker 
 
-  artifacts: 
-   paths: 
-      - target/*.war 
+  script: 
+    - echo "Maven compile started"
+    - "mvn compile"
 
 
-nexus-deploy:
+test_job:
+  stage: test
+  tags:
+    - docker 
+
+  script: 
+    - echo "Maven test started"
+    - "mvn test"
+
+package_job:
+  stage: package
+  tags:
+    - docker 
+
+  script: 
+    - echo "Maven packaging started"
+    - "mvn package"
+
+
+Deploy_job:
   stage: deploy
-  script:
-    - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
-    # - 'mvn $MAVEN_OPTS deploy -Dmaven.test.skip=true'
+  tags:
+    - docker 
 
-
-  # environment:
-  #   name: nexus-deployment
-  # variables:
-  #   # MAVEN_SETTINGS_XML: "${CI_PROJECT_DIR}/settings.xml"
-  #   NEXUS_USER: "$NEXUS_USER"
-  #   NEXUS_PASS: "$NEXUS_PASS"
-  # dependencies:
-  #   - maven-build
-
-# tomcat-deploy:
-#   stage: deploy
-#   script:
-#     - 'curl --upload-file target/*.war "$TOMCAT_URL/manager/text/deploy?path=/app&update=true" -u $TOMCAT_USER:$TOMCAT_PASS'
-#   dependencies:
-#     - maven-build
+  script: 
+    - echo "Maven deploy started"
