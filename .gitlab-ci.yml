@@ -36,7 +36,8 @@ test_job:
 nexus-deploy:
   stage: deploy
   script:
-    - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
+    - 'mvn clean deploy '#-DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
+
     # - 'mvn $MAVEN_OPTS deploy -Dmaven.test.skip=true'
 
 
