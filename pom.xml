@@ -91,7 +91,7 @@
           </executions>
           <configuration>
             <serverId>nexus</serverId>
-            <nexusUrl>http://3.110.180.206:8081/nexus/</nexusUrl>
+            <nexusUrl>http://43.205.140.232:8081/nexus/</nexusUrl>
             <skipStaging>true</skipStaging>
           </configuration>
         </plugin>
@@ -130,13 +130,13 @@
 	  <repository>
 		  <id>nexus-releases</id>
 		  <name>Nexus Release Repository</name>
-		  <url>http://3.110.180.206:8081/repository/maven-releases/</url>
+		  <url>http://43.205.140.232:8081/repository/maven-releases/</url>
 		  </repository>
 
 
    	<snapshotRepository>
      		 <id>nexus-snapshots</id>
-		 <url>http://3.110.180.206:8081/repository/maven-snapshots/</url>
+		 <url>http://43.205.140.232:8081/repository/maven-snapshots/</url>
    	</snapshotRepository>
   </distributionManagement>
 
