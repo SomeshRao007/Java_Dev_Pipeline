@@ -20,7 +20,12 @@ build_job:
   script: 
     - echo "Maven compile started"
     - "mvn compile"
+    - echo "Maven packaging started"
+    - "mvn package"
 
+  artifacts: 
+   paths: 
+      - target/*.war    
 
 test_job:
   stage: test
@@ -28,14 +33,14 @@ test_job:
     - echo "Maven test started"
     - "mvn test"
 
-package_job:
-  stage: package
-  script: 
-    - echo "Maven packaging started"
-    - "mvn package"
-
-
-Deploy_job:
+nexus-deploy:
   stage: deploy
-  script: 
-    - echo "Maven deploy started"
+  script:
+    - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
+    # - 'mvn $MAVEN_OPTS deploy -Dmaven.test.skip=true'
+
+
+# Deploy_job:
+#   stage: deploy
+#   script: 
+#     - echo "Maven deploy started"
