@@ -1,47 +1,49 @@
+
+
 variables:
-  MAVEN_OPTS: -Dmaven.repo.local=.m2/repository
+   MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
+   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
 
 image: maven:latest
 
-stages:
-    - build
-    - test
-    - package
-    - deploy
-
-
-cache:
+cache: 
   paths:
-    - .m2/repository
-    - target
+     - .m2/repository/
+     - target/
 
-build_job:
-  stage: build
+stages:
+   - build
+   - test
+   - package
+   - deploy
+
+codebuild:
+  tags: 
+     - build
+  stage: build 
+  script:   
+     - mvn compile 
+
+
+Codepackage: 
+  tags: 
+     - build 
+  stage: package
   script: 
-    - echo "Maven compile started"
-    - "mvn compile"
-    - echo "Maven packaging started"
-    - "mvn package"
-
+     - mvn $MAVEN_CLI_OPTS package -Dmaven.test.skip=true 
+     - echo "Packaging the code" 
   artifacts: 
-   paths: 
-      - target/*.war    
+     paths: 
+        - target/*.war 
 
-test_job:
-  stage: test
+
+Codedeploy: 
+  tags: 
+     - build 
+  stage: deploy 
   script: 
-    - echo "Maven test started"
-    - "mvn test"
+     - mvn $MAVEN_CLI_OPTS deploy -Dmaven.test.skip=true 
+     - echo "installing the package in local repository" 
 
-nexus-deploy:
-  stage: deploy
-  script:
-    - 'mvn clean deploy '#-DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
-
-    # - 'mvn $MAVEN_OPTS deploy -Dmaven.test.skip=true'
-
-
-# Deploy_job:
-#   stage: deploy
 #   script: 
 #     - echo "Maven deploy started"
