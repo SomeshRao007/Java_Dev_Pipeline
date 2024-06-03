@@ -451,7 +451,7 @@ Exit the psql prompt and return to normal user.
 
 `exit`
 
-**Step 5:**
+**Step 6:**
 
 Download and install sonarqube application
 
@@ -460,7 +460,7 @@ cd /opt
 sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.5.1.90531.zip
 ```
 
-**Step 6:**
+**Step 7:**
 
 Unzip sonarqube source files and rename the folder.
 
@@ -469,7 +469,7 @@ sudo unzip sonarqube-10.5.1.90531.zip
 sudo mv sonarqube-10.5.1.90531 sonarqube
 ~~~
 
-**Step 7:**
+**Step 8:**
 
 Updaing sonarqube database, adding PSQL password in properties file.
 
@@ -504,7 +504,7 @@ root    ALL=(ALL:ALL) ALL
 sonar    ALL=(ALL:ALL) ALL
 ~~~
 
-**Step 8:**
+**Step 9:**
 
 Add Sonar User and Privileges, Create a user named sonar and make it the owner of the /opt/sonarqube directory.
 
@@ -517,7 +517,7 @@ add sonar user to
 
 sudo vi /etc/sudoers
 
-**Step 9:**
+**Step 10:**
 
 Start Sonarqube Service
 
@@ -591,6 +591,161 @@ Good 3 🥉 down 2 more to go!
 
 
 ### 4. Tomcat Installation 
+
+Apache Tomcat is an open-source web server and servlet container. It implements the Java Servlet, JavaServer Pages (JSP), and Java Expression Language (EL) specifications, enabling developers to run Java-based web applications. 
+
+>why we use it in current market ?
+>> We use Tomcat in the current market because it provides a robust, lightweight, and highly scalable environment for deploying and running Java servlets, JavaServer Pages (JSP), and web services. Its cross-platform compatibility, efficient thread management, and extensive community support make it a widely adopted choice for running Java web applications in production environments.
+
+
+For Installation: 
+
+**Step 1:**
+
+first install java 
+
+~~~
+yum install java-1.8* 
+~~~
+
+**Step 2:**
+
+Change to /opt dir
+
+~~~
+sudo su -
+
+cd /
+
+cd /opt
+~~~
+
+**Step 3:**
+
+Download and unzip source code
+~~~
+wget https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.24/src/apache-tomcat-10.1.24-src.tar.gz
+~~~
+
+
+~~~
+tar -zvxf apache-tomcat-10.1.24.tar.gz
+~~~
+
+**Step 4:**
+
+Give execuatble permissions to the startup and shutdown scripts.
+
+~~~
+cd apache-tomcat-10.1.24
+
+cd bin
+~~~
+
+~~~
+chmod +x startup.sh
+chmod +x shutdown.sh
+~~~
+
+**Step 5:**
+
+Create symbolic links files for tomcat server up and down
+
+> what are links in linux??
+> > In Linux, creating a link refers to creating a special file that acts as a shortcut to another file or directory. There are two main types of links:
+> > 1. **Hard Link:** This creates a new file that points directly to the original file's data. Any changes made to the link or the original file affect both. Hard links can only be created for files, not directories.
+> > 2. **Symbolic Link (Symlink):** This is a more common type of link. It's like a pointer that tells the system where the actual file or directory resides. Modifying the link itself doesn't affect the original file. Symbolic links can be used for both files and directories. 
+
+
+
+~~~
+ln -s /opt/apache-tomcat-10.1.24/bin/startup.sh /usr/local/bin/tomcatup
+ln -s /opt/apache-tomcat-10.1.24/bin/shutdown.sh /usr/local/bin/tomcatdown
+~~~
+
+this will help running scripts from anywhere
+
+~~~
+tomcatup
+~~~
+
+**Step 6:**
+
+Change Settings to Manage Tomcat
+
+~~~
+cd apache-tomcat-10.1.24
+~~~
+
+find -name **context.xml**
+
+Comment value tag sections in below all files:
+
+open these context.xml file: 
+
+![Screenshot 2024-06-03 191740](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/9dc9e042-e3d8-4056-98e4-7f9d32386d30)
+
+~~~
+vi ./webapps/examples/META-INF/context.xml
+vi ./webapps/host-manager/META-INF/context.xml
+vi ./webapps/manager/META-INF/context.xml
+~~~
+
+
+and find this tag in all the file and comment it out we are doing this to avoid any potential conflicts by commenting it we are essentially disabling the funcationality :
+
+ ![Screenshot 2024-06-03 192353](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/b3a2b310-cc22-474a-826b-fdf81bf77d2a)
+
+
+**Step 7:**
+
+Update tje user info in **tomcat-user.xml** file (we can create new user here and give any user permissions here in this file.)
+
+~~~
+cd ..
+cd /opt/apache-tomcat-10.1.24
+cd conf
+vi tomcat-users.xml
+~~~
+
+Add below lines between <tomcat-users> tag
+
+~~~
+
+<role rolename="manager-gui"/>
+<role rolename="manager-script"/>
+<role rolename="manager-jmx"/>
+<role rolename="manager-status"/>   
+<user username="admin" password="admin" roles="manager-gui,manager-script,manager-jmx,manager-status"/>
+<user username="deployer" password="deployer" roles="manager-script"/>
+<user username="tomcat" password="s3cret" roles="manager-gui"/>
+
+~~~
+
+the server can be accessed on port 8080. http://<Public IP>:8080/ 
+
+![Screenshot 2024-05-22 170651](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/06c079b1-5dcd-4fa5-b51b-1f353c5f1149)
+
+
+To access any service or any example app you need to login you can use credientials as you configured. 
+
+
+
+### 5. Jenkins Installation 
+
+Last one to start with configuration.
+
+
+Jenkins is an open-source automation server that enables continuous integration and continuous delivery/deployment (CI/CD) of software projects. It helps automate the non-human part of the software development process, including building, testing, and deploying applications. 
+
+> Why do we use jenkins?
+>> 1. **Continuous Integration and Continuous Delivery** (CI/CD): Jenkins is widely adopted for implementing CI/CD pipelines, which enable teams to build, test, and deploy software efficiently and frequently.
+>> 2. **Extensibility and Plugins**: Jenkins has a vast ecosystem of plugins that integrate with various tools and technologies used in the software development process.
+>> 3. **Cross-platform and Language Support**: Jenkins supports multiple platforms (Windows, Linux, macOS) and a wide range of programming languages.
+>> 4. **Scalability and Distributed Builds**: Jenkins can be scaled horizontally by adding more nodes (agents) to handle larger workloads or distributed builds, making it suitable for large-scale projects and enterprises.
+>> 5. **Open-Source and Community**: Being open-source, Jenkins benefits from a large and active community contributing plugins, documentation, and support, which helps organizations avoid vendor lock-in and reduce costs.
+
+
 
 
 
