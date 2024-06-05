@@ -1,13 +1,8 @@
-![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/9b9d6f5a-7eff-4e31-b61f-7a41c1b9b696)Well seeing the image below you might be wondering, how he end up in this position!!
-
-allow me to expalin. 
-
-![Screenshot 2024-05-30 130915](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/8a85122c-2f7e-4f7d-9bca-0db277c24da9)
-
+This document describes continuous integration and continuous delivery (CI/CD) for a Java application. After submitting the code to your GitHub repository, Jenkins will start the pipeline. It organizes static code analysis using SonarQube, builds the application using Maven, saves the artifacts to Nexus and finally deploys them to the Tomcat server for execution. The following sections dive into the basic setup steps: installing the tool, configuring (SonarQube on Maven, Maven on Nexus, and finally Tomcat), creating a pipeline, and troubleshooting potential bugs. **At the end there is an ester egg** 🥚.
 
 ## Flow Diagram 
 
-To have a better understanding on what we are doing its important you under the flow. 
+To have a better understanding on what we are doing its important you under the flow. This implementation is quite normal keep updated i will post the pipeline with docker and with pipeline script. 
 
 ![java pipeline](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/4304899f-f2a2-4ceb-979a-8880aed96eb7)
 
@@ -823,6 +818,49 @@ For more info [check here](https://www.jenkins.io/doc/tutorials/tutorial-for-ins
 
 we are now done with installation part and lets move to configuring these apps. 
 
+### Maven for .WAR file 
+
+Initially maven executes build process and packs in `.JAR` but since we are using Tomcat application it uses only `.war` files. so we need make some changes to make Maven builes in .war package. 
+
+#### In POM.xml
+
+Add this plugin under **Plugins tag**. 
+~~~
+        <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-war-plugin</artifactId>
+	            <version>3.3.2</version> <!-- Update to the latest version if need> -->
+	            <configuration>
+		            <warSourceDirectory>src/main/webapp</warSourceDirectory>
+		            <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
+	            </configuration>
+        </plugin>
+
+~~~
+
+#### In main project DIRectory
+
+now as we mentioned above in configuration tab we need to create folder and a web.xml file. 
+
++ From your main project directory create a folder in this path src>main>**webbapp>WEB-INF** (highlighted ones are the new folder names).
++ Under WEB-INF folder create web.xml folder, and paste this content.
+
+~~~
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+         http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+    <display-name>Your Web Application</display-name>
+</web-app>
+~~~
+
+And change package name to war as shown below.
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/d78283d6-9986-4280-a74c-4898c885b121)
+
+that's it!!
 
 ### Maven to Nexus
 
@@ -1049,6 +1087,47 @@ nexus-deploy:
 
 > Now go to sonarqube application and click on new project and get your Access token then in the next step it will give a command to run where your maven and nexus is configured. 
 
+### Access Tokens for Github and Gitlab
+
+we need access tokens from git server so that our application(jenkins) can communicate on our behalf and automate things.
+
+#### For GitLab
+
+
+1. Login to you git lab and go to edit profile. 
+
+![Screenshot 2024-06-04 174114](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/f7f8c1ff-78c5-4cc4-8fe7-8ae36dd2638f)
+
+
+2. Click on access token and add new token.
+
+![Screenshot 2024-06-04 174305](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/d046c5bd-1241-4278-94d7-bd2c262e1d15)
+
+
+3. Give a name and give read scope along with read/write. if you wish to do something else then include scope for that too.
+
+![Screenshot 2024-06-04 174607](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/fec474e5-d615-4887-92e3-15e9d7acb08b)
+
+that's it done!!
+
+#### FOr Github
+
+1. Login then on right menu go for settings.
+
+![Screenshot 2024-06-04 175340](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/5c4e20aa-1f97-44ef-b6e5-3e5f6da536de)
+
+2. Scroll down and go fr developer settings.
+
+![Screenshot 2024-06-04 175539](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/ff8fd142-e564-47ac-b31b-e8700a6f8042)
+
+3. you will see a bunch of option here, select classic token.
+
+> Personal access tokens (classic) function like ordinary OAuth access tokens. They can be used instead of a password for Git over HTTPS, or can be used to authenticate to the API over Basic Authentication.
+
+![Screenshot 2024-06-04 175720](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/cd2d39d0-167c-4d93-aaab-2bda0236a4b2)
+
+fill up name and scope and that's it!!
+
 
 ### Configuration of Jenkines 
 
@@ -1070,15 +1149,6 @@ Before we go start with building pipeline we need to install a few plugins. I wi
 10. GitLab Plugin
 
 So, here i mentioned both gitlab and github plugins you can install the one which u will be using for this project. 
-
-ACCESS TOKENS GITLAB AND HUB
-
-
-
-
-
-
-
 
 #### Setup Credentials  
 
@@ -1231,5 +1301,512 @@ similarly check for nexus repo:
 
 ![Screenshot 2024-05-31 111750](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/d15c089a-ada1-4cc4-8a66-b588a34fb2f4)
 
+## Understanding the Errors
+
+Initially, I got alot of errors in setting up each application server. A few of them are:
+
+1.**Nexus Authentication**
+
+I was getting Authentication error while pushing my build to nexus repo. 
+> Error 401 build unsuccessful
+> > **401 Unauthorized Error is an HTTP status code error that represents the request sent by the client to the server that lacks valid authentication credentials.**
+
+~~~
+[INFO] --- maven-deploy-plugin:2.8.1:deploy (default-deploy) @ my-app ---
+Downloading from nexus-snapshots: http://3.110.180.206:8081/repository/maven-snapshots/com/mycompany/app/my-app/1.0-SNAPSHOT/maven-metadata.xml
+Uploading to nexus-snapshots: http://3.110.180.206:8081/repository/maven-snapshots/com/mycompany/app/my-app/1.0-SNAPSHOT/my-app-1.0-20240515.111829-1.war
+Uploading to nexus-snapshots: http://3.110.180.206:8081/repository/maven-snapshots/com/mycompany/app/my-app/1.0-SNAPSHOT/my-app-1.0-20240515.111829-1.pom
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.606 s
+[INFO] Finished at: 2024-05-15T11:18:29Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-deploy-plugin:2.8.1:deploy (default-deploy) on project my-app: Failed to deploy artifacts: Could not transfer artifact com.mycompany.app:my-app:war:1.0-20240515.111829-1 from/to nexus-snapshots (http://3.110.180.206:8081/repository/maven-snapshots/): Transfer failed for http://3.110.180.206:8081/repository/maven-snapshots/com/mycompany/app/my-app/1.0-SNAPSHOT/my-app-1.0-20240515.111829-1.war 401 Unauthorized -> [Help 1]
+[ERROR]
+~~~
+
+After some researching i found there are **2 Settings.xml** files, one for global setting and one for local user. when we are making request like this, Nexus credentials where we menntion in `settings.xml` must be written in the **gloabl file**. 
+
++ Location for global files can be found in installation folder under `bin` or in `conf`.
++ Location to local files can be found in .M2 repository ( `cd ~` then `cd .m2`).
++ And wherever name you write under <id> tag the value in this tag should be the **same** in all the places used in this regards.
+
+if you have network issues and unable to open webpage then you can access vis this command.
+
+~~~
+curl -u your-username:your-password http://3.110.180.206:8081/repository/maven-snapshots/
+~~~
+
+if you want to get prompted in debugging mode then use `-X`: 
+
+~~~
+mvn deploy -X
+~~~
+
+2. **Sonar Errors**
+![f375d287-037d-4a7f-b885-f1e2da8fc605](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/58b75d12-5e15-47f4-936b-7d6083b924a0)
+
+i got this while setting up sonarqube server i was using brand new version which only supports **Java version above 11** it does not support even java 11. i installed java 17 and problem was solved instantly. 
+
++ You need to understand why an error occured, you have t question your self wwhere you went wrong and answer for that lies in **logs.**
+
+ ANother Error example is this:
+
+ ~~~
+[ELASTICSEARCH\] from \[/opt/sonarqube/elasticsearch\]: /usr/lib/jvm/java-17-amazon-corretto.x86\_64/bin/java -Xms4m -Xmx64m -XX:+UseSerialGC -Dcli.name=server -Dcli.script=./bin/elasticsearch -Dcli.libs=lib/tools/server-cli -Des.path.home=/opt/sonarqube/elasticsearch -Des.path.conf=/opt/sonarqube/temp/conf/es -Des.distribution.type=tar -cp /opt/sonarqube/elasticsearch/lib/\*:/opt/sonarqube/elasticsearch/lib/cli-launcher/\* org.elasticsearch.launcher.CliToolLauncher
+
+2024.05.29 09:19:39 INFO app\[\]\[o.s.a.SchedulerImpl\] Waiting for Elasticsearch to be up and running
+
+2024.05.29 09:19:45 WARN app\[\]\[o.s.a.p.AbstractManagedProcess\] Process exited with exit value \[ElasticSearch\]: 1
+
+2024.05.29 09:19:45 INFO app\[\]\[o.s.a.SchedulerImpl\] Process\[ElasticSearch\] is stopped
+
+2024.05.29 09:19:45 INFO app\[\]\[o.s.a.SchedulerImpl\] SonarQube is stopped
+~~~
+
+- The log indicates that the embedded **Elasticsearch process failed to start** correctly, which is causing SonarQube to fail to start as well.
+- Check Elasticsearch logs: The SonarQube log doesn't provide details on why Elasticsearch failed to start. Look for the Elasticsearch log files, which should be located in the `/opt/sonarqube/logs/` directory open `es.log` file foe elasticsearch related issues. The log files may provide more information about the failure.
+- After reading logs i got to know, i havent given **read/write permissions** on the `/opt/sonarqube` directory and its subdirectories. so running `sudo chown -R sonarqube:sonarqube /opt/sonarqube` solved this error.
+
+
+3. **Jenkins Errors**
+
+Ironically i was getting the same sonarqube error when i was running jenkins pipeline for the first time. I realised this is because I kept incorrect path for _Analysis properties_ --> `sonar.source` parameter. 
+
+in my finding i found out: 
+
++ The sonar.sources property is used to specify the paths to the source code directories that you want SonarQube to analyze.
++  source code is in the root directory of your project then `sonar.sources=.`.
++  If your source code is in a subdirectory (src/main/java) then: `sonar.sources=src/main/java`.
++  If your source code is in multiple subdirectories (src/main/java, src/main/resources) then: `sonar.sources=src/main/java,src/main/resources`
++  Multiple dir but same Parent dir then `sonar.sources=src`
+
+Ironic part was idk my path, i was confused at this point then, i wrote a script and executed as pre-build in jenkins to print out my path, later i edited my `sonar.source` parameter with correct path. 
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/01887b5b-c6b3-4e54-ab97-4119783027ec)
+
+
+script :
+
+~~~
+find . -type d -name 'java' -printf '%P\n'
+~~~
+
+This command will list all directories named 'java' (replace 'java' with your source code directory name if different) relative to the current directory. You can then use this output to construct the sonar.sources value.
+
+>>Note that if your project uses multiple programming languages like Java and JavaScript, you may need to specify separate **sonar.sources** values for each language using the appropriate language-specific property: **sonar.java.sources** and **sonar.javascript.sources**.
+
+Immediately after this i got this output: 
+
+~~~
+11:48:22 Started by user somesh rao
+11:48:22 Running as SYSTEM
+11:48:22 Building in workspace /var/lib/jenkins/workspace/sonarnexus
+11:48:22 The recommended git tool is: NONE
+11:48:22 using credential 6886c502-3e09-4920-8c53-c07d01f3377d
+11:48:22  > git rev-parse --resolve-git-dir /var/lib/jenkins/workspace/sonarnexus/.git # timeout=10
+11:48:22 Fetching changes from the remote Git repository
+11:48:22  > git config remote.origin.url https://gitlab.com/devopsprojects4800914/maven-java-ci-cd.git # timeout=10
+11:48:22 Fetching upstream changes from https://gitlab.com/devopsprojects4800914/maven-java-ci-cd.git
+11:48:22  > git --version # timeout=10
+11:48:22  > git --version # 'git version 2.40.1'
+11:48:22 using GIT_ASKPASS to set credentials GITLAB SOMESH
+11:48:22  > git fetch --tags --force --progress -- https://gitlab.com/devopsprojects4800914/maven-java-ci-cd.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+11:48:23  > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+11:48:23 Checking out Revision 058ccda6e01d42649f502b5bebf5c275ed81cfbf (refs/remotes/origin/main)
+11:48:23  > git config core.sparsecheckout # timeout=10
+11:48:23  > git checkout -f 058ccda6e01d42649f502b5bebf5c275ed81cfbf # timeout=10
+11:48:23 Commit message: "Update pom.xml"
+11:48:23  > git rev-list --no-walk 058ccda6e01d42649f502b5bebf5c275ed81cfbf # timeout=10
+11:48:23 [sonarnexus] $ /bin/sh -xe /tmp/jenkins10354394323322641499.sh
+11:48:23 + find . -type d -name java -printf '%P\n'
+11:48:23 src/main/java
+11:48:23 src/test/java
+11:48:23 [sonarnexus] $ /var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/qubeforanalysis/bin/sonar-scanner -X -Dsonar.host.url=http://3.110.50.2:9000/ ******** -Dsonar.projectKey=sonar_jenkins -Dsonar.projectName=sonar_jenkins -Dsonar.projectVersion=1.0 -Dsonar.sources=. -Dsonar.projectBaseDir=/var/lib/jenkins/workspace/sonarnexus
+11:48:23 06:18:23.848 INFO: Scanner configuration file: /var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/qubeforanalysis/conf/sonar-scanner.properties
+11:48:23 06:18:23.889 INFO: Project root configuration file: NONE
+11:48:23 06:18:23.943 INFO: SonarScanner 5.0.1.3006
+11:48:23 06:18:23.944 INFO: Java 17.0.11 Amazon.com Inc. (64-bit)
+11:48:23 06:18:23.944 INFO: Linux 6.1.90-99.173.amzn2023.x86_64 amd64
+11:48:24 06:18:24.305 DEBUG: keyStore is : 
+11:48:24 06:18:24.306 DEBUG: keyStore type is : pkcs12
+11:48:24 06:18:24.307 DEBUG: keyStore provider is : 
+11:48:24 06:18:24.307 DEBUG: init keystore
+11:48:24 06:18:24.308 DEBUG: init keymanager of type SunX509
+11:48:24 06:18:24.541 DEBUG: Create: /var/lib/jenkins/.sonar/cache
+11:48:24 06:18:24.542 INFO: User cache: /var/lib/jenkins/.sonar/cache
+11:48:24 06:18:24.543 DEBUG: Create: /var/lib/jenkins/.sonar/cache/_tmp
+11:48:24 06:18:24.546 DEBUG: Extract sonar-scanner-api-batch in temp...
+11:48:24 06:18:24.550 DEBUG: Get bootstrap index...
+11:48:24 06:18:24.551 DEBUG: Download: http://3.110.50.2:9000/batch/index
+11:48:24 06:18:24.653 DEBUG: Get bootstrap completed
+11:48:24 06:18:24.665 DEBUG: Create isolated classloader...
+11:48:24 06:18:24.694 DEBUG: Start temp cleaning...
+11:48:24 06:18:24.703 DEBUG: Temp cleaning done
+11:48:24 06:18:24.703 DEBUG: Execution getVersion
+11:48:24 06:18:24.732 INFO: Analyzing on SonarQube server 10.5.1.90531
+11:48:24 06:18:24.732 INFO: Default locale: "en", source code encoding: "UTF-8" (analysis is platform dependent)
+11:48:24 06:18:24.733 DEBUG: Work directory: /var/lib/jenkins/workspace/sonarnexus/.scannerwork
+11:48:24 06:18:24.735 DEBUG: Execution execute
+11:48:25 06:18:25.463 DEBUG: Community 10.5.1.90531
+11:48:25 06:18:25.907 INFO: Load global settings
+11:48:26 06:18:26.003 DEBUG: GET 200 http://3.110.50.2:9000/api/settings/values.protobuf | time=94ms
+11:48:26 06:18:26.072 INFO: Load global settings (done) | time=165ms
+11:48:26 06:18:26.122 INFO: Server id: 147B411E-AY_HwAqcsSyVoJJeB1fg
+11:48:26 06:18:26.136 INFO: User cache: /var/lib/jenkins/.sonar/cache
+11:48:26 06:18:26.149 INFO: Loading required plugins
+11:48:26 06:18:26.150 INFO: Load plugins index
+11:48:26 06:18:26.167 DEBUG: GET 200 http://3.110.50.2:9000/api/plugins/installed | time=17ms
+11:48:26 06:18:26.214 INFO: Load plugins index (done) | time=64ms
+11:48:26 06:18:26.215 INFO: Load/download plugins
+11:48:26 06:18:26.314 INFO: Load/download plugins (done) | time=99ms
+11:48:26 06:18:26.314 DEBUG: Plugins not loaded because they are optional: [csharp, flex, go, web, java, javascript, kotlin, php, ruby, sonarscala, vbnet]
+11:48:26 06:18:26.357 DEBUG: Plugins loaded:
+11:48:26 06:18:26.361 DEBUG:   * Python Code Quality and Security 4.17.0.14845 (python)
+11:48:26 06:18:26.361 DEBUG:   * Clean as You Code 2.3.0.1782 (cayc)
+11:48:26 06:18:26.361 DEBUG:   * XML Code Quality and Security 2.10.0.4108 (xml)
+11:48:26 06:18:26.361 DEBUG:   * JaCoCo 1.3.0.1538 (jacoco)
+11:48:26 06:18:26.362 DEBUG:   * IaC Code Quality and Security 1.27.0.9518 (iac)
+11:48:26 06:18:26.362 DEBUG:   * Text Code Quality and Security 2.10.0.2188 (text)
+11:48:26 06:18:26.642 DEBUG: register org.eclipse.jgit.util.FS$FileStoreAttributes$$Lambda$300/0x00007f689027c200@75b21c3b with shutdown hook
+11:48:26 06:18:26.903 INFO: Process project properties
+11:48:26 06:18:26.916 INFO: Process project properties (done) | time=12ms
+11:48:26 06:18:26.932 INFO: Project key: sonar_jenkins
+11:48:26 06:18:26.933 INFO: Base dir: /var/lib/jenkins/workspace/sonarnexus
+11:48:26 06:18:26.933 INFO: Working dir: /var/lib/jenkins/workspace/sonarnexus/.scannerwork
+11:48:26 06:18:26.933 DEBUG: Project global encoding: UTF-8, default locale: en
+11:48:26 06:18:26.949 INFO: Load project settings for component key: 'sonar_jenkins'
+11:48:26 06:18:26.990 DEBUG: GET 200 http://3.110.50.2:9000/api/settings/values.protobuf?component=sonar_jenkins | time=40ms
+11:48:26 06:18:26.998 INFO: Load project settings for component key: 'sonar_jenkins' (done) | time=49ms
+11:48:27 06:18:27.044 DEBUG: Creating module hierarchy
+11:48:27 06:18:27.045 DEBUG:   Init module 'sonar_jenkins'
+11:48:27 06:18:27.046 DEBUG:     Base dir: /var/lib/jenkins/workspace/sonarnexus
+11:48:27 06:18:27.046 DEBUG:     Working dir: /var/lib/jenkins/workspace/sonarnexus/.scannerwork
+11:48:27 06:18:27.046 DEBUG:     Module global encoding: UTF-8, default locale: en
+11:48:27 06:18:27.065 INFO: Load quality profiles
+11:48:27 06:18:27.218 DEBUG: GET 200 http://3.110.50.2:9000/api/qualityprofiles/search.protobuf?project=sonar_jenkins | time=152ms
+11:48:27 06:18:27.256 INFO: Load quality profiles (done) | time=191ms
+11:48:27 06:18:27.279 INFO: Auto-configuring with CI 'Jenkins'
+11:48:27 06:18:27.323 INFO: Load active rules
+11:48:27 06:18:27.498 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=6e28ff22-d416-4438-9f7d-f74e8a1b2f38&ps=500&p=1 | time=174ms
+11:48:27 06:18:27.831 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=7e356748-cad6-46c8-95ca-cd87956e55bf&ps=500&p=1 | time=175ms
+11:48:28 06:18:28.046 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=cc2d38ed-cdff-4a72-a425-5d389e37e174&ps=500&p=1 | time=201ms
+11:48:28 06:18:28.069 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=6e41c646-24f6-4101-bb7b-6c703964c5f6&ps=500&p=1 | time=13ms
+11:48:29 06:18:29.837 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=48163586-12df-4b41-abfa-2db4fd3faa25&ps=500&p=1 | time=1766ms
+11:48:31 06:18:31.194 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=8ecf26c1-3064-4dab-9621-0944148c0e45&ps=500&p=1 | time=1249ms
+11:48:31 06:18:31.537 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=86296b7d-d160-4a73-96c3-6ecb8de5f10e&ps=500&p=1 | time=250ms
+11:48:34 06:18:34.011 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=e5919e0e-9958-431a-b145-c058770797f0&ps=500&p=1 | time=2467ms
+11:48:34 06:18:34.307 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=e5919e0e-9958-431a-b145-c058770797f0&ps=500&p=2 | time=131ms
+11:48:34 06:18:34.782 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=b6a54bd0-3a5d-46b7-8e7b-65a245e36a53&ps=500&p=1 | time=467ms
+11:48:34 06:18:34.939 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=df347da7-9402-43a7-9fc8-9e192c733e59&ps=500&p=1 | time=153ms
+11:48:35 06:18:35.102 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=af805cf3-2a10-4cd5-9cc6-fee0ff4e5994&ps=500&p=1 | time=158ms
+11:48:35 06:18:35.123 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=d2c84546-8d79-48cc-bf38-ddc2ffbe946b&ps=500&p=1 | time=17ms
+11:48:35 06:18:35.147 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=afd7eb4d-b9a6-439a-93d4-f3d6755b04da&ps=500&p=1 | time=22ms
+11:48:35 06:18:35.858 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=9956ba37-ea7b-4953-9ba2-d416c57a6a8a&ps=500&p=1 | time=708ms
+11:48:36 06:18:36.103 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=d8e18aec-1995-4fde-90b3-ab0c2ef37c8f&ps=500&p=1 | time=233ms
+11:48:36 06:18:36.120 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=1c17cf42-f52e-4bc0-8ce9-ef126732888d&ps=500&p=1 | time=14ms
+11:48:36 06:18:36.198 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=1e4a1993-e64f-4f8e-bbe6-aa4d9941c837&ps=500&p=1 | time=77ms
+11:48:36 06:18:36.990 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=efdc2227-8807-4c89-aa36-3712bbf9e013&ps=500&p=1 | time=790ms
+11:48:37 06:18:37.635 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=ab2da13f-d6bb-49f8-ac7f-33c59c347096&ps=500&p=1 | time=635ms
+11:48:37 06:18:37.779 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=26704e00-d3ae-4263-9598-c8db3a45418d&ps=500&p=1 | time=139ms
+11:48:39 06:18:39.195 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=b7002a79-b186-44c3-b5a9-f1cf0e9c4f10&ps=500&p=1 | time=1413ms
+11:48:39 06:18:39.871 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=aa47980b-55de-4460-ad70-233ce0c676c8&ps=500&p=1 | time=652ms
+11:48:40 06:18:40.332 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=e7810812-c702-40da-b278-6efc66a8b38d&ps=500&p=1 | time=454ms
+11:48:40 06:18:40.461 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=ccd84e8f-76eb-414c-b3d7-8ffad3db8d85&ps=500&p=1 | time=126ms
+11:48:42 06:18:42.152 DEBUG: GET 200 http://3.110.50.2:9000/api/rules/list.protobuf?qprofile=0c437d47-0061-449a-9339-3395ff61d661&ps=500&p=1 | time=1688ms
+11:48:42 06:18:42.243 INFO: Load active rules (done) | time=14920ms
+11:48:42 06:18:42.268 INFO: Load analysis cache
+11:48:42 06:18:42.285 DEBUG: GET 404 http://3.110.50.2:9000/api/analysis_cache/get?project=sonar_jenkins | time=16ms
+11:48:42 06:18:42.288 INFO: Load analysis cache (404) | time=20ms
+11:48:42 06:18:42.349 DEBUG: GET 200 http://3.110.50.2:9000/api/languages/list | time=12ms
+11:48:42 06:18:42.452 DEBUG: Declared patterns of language Kubernetes were converted to sonar.lang.patterns.kubernetes : 
+11:48:42 06:18:42.460 DEBUG: Declared patterns of language CSS were converted to sonar.lang.patterns.css : **/*.css,**/*.less,**/*.scss,**/*.sass
+11:48:42 06:18:42.461 DEBUG: Declared patterns of language Scala were converted to sonar.lang.patterns.scala : **/*.scala
+11:48:42 06:18:42.462 DEBUG: Declared patterns of language JSP were converted to sonar.lang.patterns.jsp : **/*.jsp,**/*.jspf,**/*.jspx
+11:48:42 06:18:42.464 DEBUG: Declared patterns of language JavaScript were converted to sonar.lang.patterns.js : **/*.js,**/*.jsx,**/*.cjs,**/*.mjs,**/*.vue
+11:48:42 06:18:42.464 DEBUG: Declared patterns of language Python were converted to sonar.lang.patterns.py : **/*.py
+11:48:42 06:18:42.465 DEBUG: Declared patterns of language Docker were converted to sonar.lang.patterns.docker : **/Dockerfile,**/*.dockerfile
+11:48:42 06:18:42.466 DEBUG: Declared patterns of language Java were converted to sonar.lang.patterns.java : **/*.java,**/*.jav
+11:48:42 06:18:42.468 DEBUG: Declared patterns of language HTML were converted to sonar.lang.patterns.web : **/*.html,**/*.xhtml,**/*.cshtml,**/*.vbhtml,**/*.aspx,**/*.ascx,**/*.rhtml,**/*.erb,**/*.shtm,**/*.shtml,**/*.cmp,**/*.twig
+11:48:42 06:18:42.469 DEBUG: Declared patterns of language Flex were converted to sonar.lang.patterns.flex : **/*.as
+11:48:42 06:18:42.470 DEBUG: Declared patterns of language XML were converted to sonar.lang.patterns.xml : **/*.xml,**/*.xsd,**/*.xsl,**/*.config
+11:48:42 06:18:42.471 DEBUG: Declared patterns of language JSON were converted to sonar.lang.patterns.json : **/*.json
+11:48:42 06:18:42.472 DEBUG: Declared patterns of language Text were converted to sonar.lang.patterns.text : 
+11:48:42 06:18:42.473 DEBUG: Declared patterns of language VB.NET were converted to sonar.lang.patterns.vbnet : **/*.vb
+11:48:42 06:18:42.473 DEBUG: Declared patterns of language CloudFormation were converted to sonar.lang.patterns.cloudformation : 
+11:48:42 06:18:42.474 DEBUG: Declared patterns of language YAML were converted to sonar.lang.patterns.yaml : **/*.yaml,**/*.yml
+11:48:42 06:18:42.475 DEBUG: Declared patterns of language Go were converted to sonar.lang.patterns.go : **/*.go
+11:48:42 06:18:42.477 DEBUG: Declared patterns of language Kotlin were converted to sonar.lang.patterns.kotlin : **/*.kt,**/*.kts
+11:48:42 06:18:42.477 DEBUG: Declared patterns of language Secrets were converted to sonar.lang.patterns.secrets : 
+11:48:42 06:18:42.478 DEBUG: Declared patterns of language Ruby were converted to sonar.lang.patterns.ruby : **/*.rb
+11:48:42 06:18:42.479 DEBUG: Declared patterns of language C# were converted to sonar.lang.patterns.cs : **/*.cs,**/*.razor
+11:48:42 06:18:42.481 DEBUG: Declared patterns of language PHP were converted to sonar.lang.patterns.php : **/*.php,**/*.php3,**/*.php4,**/*.php5,**/*.phtml,**/*.inc
+11:48:42 06:18:42.482 DEBUG: Declared patterns of language Terraform were converted to sonar.lang.patterns.terraform : **/*.tf
+11:48:42 06:18:42.483 DEBUG: Declared patterns of language AzureResourceManager were converted to sonar.lang.patterns.azureresourcemanager : **/*.bicep
+11:48:42 06:18:42.488 DEBUG: Declared patterns of language TypeScript were converted to sonar.lang.patterns.ts : **/*.ts,**/*.tsx,**/*.cts,**/*.mts
+11:48:42 06:18:42.526 INFO: Preprocessing files...
+11:48:42 06:18:42.549 DEBUG: loading config FileBasedConfig[/var/lib/jenkins/.config/jgit/config]
+11:48:42 06:18:42.550 DEBUG: readpipe [/bin/git, --version],/bin
+11:48:42 06:18:42.572 DEBUG: readpipe may return 'git version 2.40.1'
+11:48:42 06:18:42.572 DEBUG: remaining output:
+11:48:42 
+11:48:42 06:18:42.573 DEBUG: readpipe [/bin/git, config, --system, --show-origin, --list, -z],/bin
+11:48:42 06:18:42.577 DEBUG: readpipe may return 'null'
+11:48:42 06:18:42.578 DEBUG: remaining output:
+11:48:42 
+11:48:42 06:18:42.606 DEBUG: readpipe rc=128
+11:48:42 06:18:42.607 DEBUG: Exception caught during execution of command '[/bin/git, config, --system, --show-origin, --list, -z]' in '/bin', return code '128', error message 'fatal: unable to read config file '/etc/gitconfig': No such file or directory
+11:48:42 '
+11:48:42 06:18:42.608 DEBUG: loading config FileBasedConfig[/var/lib/jenkins/.config/git/config]
+11:48:42 06:18:42.609 DEBUG: loading config UserConfigFile[/var/lib/jenkins/.gitconfig]
+11:48:42 06:18:42.697 DEBUG: 21 non excluded files in this Git repository
+11:48:42 06:18:42.766 INFO: 3 languages detected in 18 preprocessed files
+11:48:42 06:18:42.767 INFO: 0 files ignored because of scm ignore settings
+11:48:42 06:18:42.770 INFO: Loading plugins for detected languages
+11:48:42 06:18:42.770 DEBUG: Detected languages: [java, web, xml]
+11:48:42 06:18:42.771 INFO: Load/download plugins
+11:48:42 06:18:42.816 INFO: Load/download plugins (done) | time=45ms
+11:48:42 06:18:42.817 DEBUG: Optional language-specific plugins not loaded: [csharp, flex, go, kotlin, php, ruby, sonarscala, vbnet]
+11:48:42 06:18:42.855 DEBUG: Plugins loaded:
+11:48:42 06:18:42.855 DEBUG:   * Java Code Quality and Security 7.33.0.35775 (java)
+11:48:42 06:18:42.855 DEBUG:   * HTML Code Quality and Security 3.15.0.5107 (web)
+11:48:42 06:18:42.855 DEBUG:   * JavaScript/TypeScript/CSS Code Quality and Security 10.13.2.25981 (javascript)
+11:48:43 06:18:43.287 INFO: Inconsistent constructor declaration on bean with name 'org.sonarsource.scanner.api.internal.IsolatedClassloader@36b4cef0-org.sonar.scanner.issue.IssueFilters': single autowire-marked constructor flagged as optional - this constructor is effectively required since there is no default constructor to fall back to: public org.sonar.scanner.issue.IssueFilters(org.sonar.api.batch.fs.internal.DefaultInputProject)
+11:48:43 06:18:43.314 INFO: Load project repositories
+11:48:43 06:18:43.331 DEBUG: GET 200 http://3.110.50.2:9000/batch/project.protobuf?key=sonar_jenkins | time=17ms
+11:48:43 06:18:43.340 INFO: Load project repositories (done) | time=26ms
+11:48:43 06:18:43.369 DEBUG: Available languages:
+11:48:43 06:18:43.369 DEBUG:   * Java => "java"
+11:48:43 06:18:43.370 DEBUG:   * HTML => "web"
+11:48:43 06:18:43.370 DEBUG:   * JSP => "jsp"
+11:48:43 06:18:43.370 DEBUG:   * JavaScript => "js"
+11:48:43 06:18:43.370 DEBUG:   * TypeScript => "ts"
+11:48:43 06:18:43.370 DEBUG:   * CSS => "css"
+11:48:43 06:18:43.370 DEBUG:   * Python => "py"
+11:48:43 06:18:43.370 DEBUG:   * XML => "xml"
+11:48:43 06:18:43.370 DEBUG:   * Terraform => "terraform"
+11:48:43 06:18:43.370 DEBUG:   * CloudFormation => "cloudformation"
+11:48:43 06:18:43.371 DEBUG:   * Kubernetes => "kubernetes"
+11:48:43 06:18:43.371 DEBUG:   * Docker => "docker"
+11:48:43 06:18:43.371 DEBUG:   * AzureResourceManager => "azureresourcemanager"
+11:48:43 06:18:43.371 DEBUG:   * YAML => "yaml"
+11:48:43 06:18:43.371 DEBUG:   * JSON => "json"
+11:48:43 06:18:43.371 DEBUG:   * Text => "text"
+11:48:43 06:18:43.371 DEBUG:   * Secrets => "secrets"
+11:48:43 06:18:43.373 INFO: Indexing files...
+11:48:43 06:18:43.373 INFO: Project configuration:
+11:48:43 06:18:43.382 DEBUG: 'pom.xml' indexed with language 'xml'
+11:48:43 06:18:43.388 DEBUG: 'settings.xml' indexed with language 'xml'
+11:48:43 06:18:43.389 DEBUG: 'src/main/java/com/mycompany/app/App.java' indexed with language 'java'
+11:48:43 06:18:43.390 DEBUG: 'src/main/webapp/WEB-INF/web.xml' indexed with language 'xml'
+11:48:43 06:18:43.390 DEBUG: 'src/main/webapp/index.html' indexed with language 'web'
+11:48:43 06:18:43.391 DEBUG: 'src/test/java/com/mycompany/app/AppTest.java' indexed with language 'java'
+11:48:43 06:18:43.393 DEBUG: 'target/classes/com/mycompany/app/App.class' indexed with no language
+11:48:43 06:18:43.394 DEBUG: 'target/maven-archiver/pom.properties' indexed with no language
+11:48:43 06:18:43.398 DEBUG: 'target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst' indexed with no language
+11:48:43 06:18:43.401 DEBUG: 'target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst' indexed with no language
+11:48:43 06:18:43.403 DEBUG: 'target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst' indexed with no language
+11:48:43 06:18:43.404 DEBUG: 'target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst' indexed with no language
+11:48:43 06:18:43.405 DEBUG: 'target/my-app-1.0-SNAPSHOT.war' indexed with no language
+11:48:43 06:18:43.406 DEBUG: 'target/my-app-1.0-SNAPSHOT/WEB-INF/classes/com/mycompany/app/App.class' indexed with no language
+11:48:43 06:18:43.407 DEBUG: 'target/my-app-1.0-SNAPSHOT/WEB-INF/web.xml' indexed with language 'xml'
+11:48:43 06:18:43.407 DEBUG: 'target/surefire-reports/TEST-com.mycompany.app.AppTest.xml' indexed with language 'xml'
+11:48:43 06:18:43.408 DEBUG: 'target/surefire-reports/com.mycompany.app.AppTest.txt' indexed with no language
+11:48:43 06:18:43.409 DEBUG: 'target/test-classes/com/mycompany/app/AppTest.class' indexed with no language
+11:48:43 06:18:43.410 INFO: 18 files indexed
+11:48:43 06:18:43.412 INFO: Quality profile for java: Sonar way
+11:48:43 06:18:43.412 INFO: Quality profile for web: Sonar way
+11:48:43 06:18:43.413 INFO: Quality profile for xml: Sonar way
+11:48:43 06:18:43.413 INFO: ------------- Run sensors on module sonar_jenkins
+11:48:43 06:18:43.549 INFO: Load metrics repository
+11:48:43 06:18:43.567 DEBUG: GET 200 http://3.110.50.2:9000/api/metrics/search?ps=500&p=1 | time=17ms
+11:48:43 06:18:43.588 INFO: Load metrics repository (done) | time=39ms
+11:48:45 06:18:45.415 DEBUG: Added 308 checks for language='ts', repository='typescript'
+11:48:45 06:18:45.422 DEBUG: Added 307 checks for language='js', repository='javascript'
+11:48:45 06:18:45.480 DEBUG: 'Import external issues report' skipped because one of the required properties is missing
+11:48:45 06:18:45.480 DEBUG: 'Python Sensor' skipped because there is no related file in current project
+11:48:45 06:18:45.480 DEBUG: 'Cobertura Sensor for Python coverage' skipped because there is no related file in current project
+11:48:45 06:18:45.481 DEBUG: 'PythonXUnitSensor' skipped because there is no related file in current project
+11:48:45 06:18:45.482 DEBUG: 'Import of Pylint issues' skipped because there is no related file in current project
+11:48:45 06:18:45.482 DEBUG: 'Import of Bandit issues' skipped because there is no related file in current project
+11:48:45 06:18:45.482 DEBUG: 'Import of Flake8 issues' skipped because there is no related file in current project
+11:48:45 06:18:45.482 DEBUG: 'Import of Mypy issues' skipped because there is no related file in current project
+11:48:45 06:18:45.482 DEBUG: 'Import of Ruff issues' skipped because there is no related file in current project
+11:48:45 06:18:45.483 DEBUG: 'Import of Checkstyle issues' skipped because one of the required properties is missing
+11:48:45 06:18:45.483 DEBUG: 'Import of PMD issues' skipped because one of the required properties is missing
+11:48:45 06:18:45.484 DEBUG: 'Import of SpotBugs issues' skipped because one of the required properties is missing
+11:48:45 06:18:45.484 DEBUG: 'Removed properties sensor' skipped because one of the required properties is missing
+11:48:45 06:18:45.486 DEBUG: 'IaC Terraform Sensor' skipped because there is no related file in current project
+11:48:45 06:18:45.486 DEBUG: 'IaC CloudFormation Sensor' skipped because there is no related file in current project
+11:48:45 06:18:45.486 DEBUG: 'IaC Kubernetes Sensor' skipped because there is no related file in current project
+11:48:45 06:18:45.487 DEBUG: 'IaC AzureResourceManager Sensor' skipped because there is no related file in current project
+11:48:45 06:18:45.487 DEBUG: 'JavaScript/TypeScript analysis' skipped because there is no related file in current project
+11:48:45 06:18:45.487 DEBUG: 'JavaScript inside YAML analysis' skipped because there is no related file in current project
+11:48:45 06:18:45.488 DEBUG: 'JavaScript/TypeScript Coverage' skipped because there is no related file in current project
+11:48:45 06:18:45.489 DEBUG: 'Import of ESLint issues' skipped because one of the required properties is missing
+11:48:45 06:18:45.489 DEBUG: 'Import of TSLint issues' skipped because one of the required properties is missing
+11:48:45 06:18:45.489 DEBUG: 'CSS Metrics' skipped because there is no related file in current project
+11:48:45 06:18:45.490 DEBUG: 'Import of stylelint issues' skipped because one of the required properties is missing
+11:48:45 06:18:45.506 DEBUG: 'Generic Test Executions Report' skipped because one of the required properties is missing
+11:48:45 06:18:45.507 DEBUG: Sensors : JavaSensor -> SurefireSensor -> HTML -> XML Sensor -> JaCoCo XML Report Importer -> JavaScript inside HTML analysis -> CSS Rules -> IaC Docker Sensor -> TextAndSecretsSensor
+11:48:45 06:18:45.508 INFO: Sensor JavaSensor [java]
+11:48:45 06:18:45.525 DEBUG: Property 'sonar.java.jdkHome' resolved with:
+11:48:45 []
+11:48:45 06:18:45.525 DEBUG: Property 'sonar.java.libraries' resolved with:
+11:48:45 []
+11:48:45 06:18:45.539 INFO: ------------------------------------------------------------------------
+11:48:45 06:18:45.539 INFO: EXECUTION FAILURE
+11:48:45 06:18:45.540 INFO: ------------------------------------------------------------------------
+11:48:45 06:18:45.540 INFO: Total time: 21.709s
+11:48:45 06:18:45.633 INFO: Final Memory: 14M/50M
+11:48:45 06:18:45.633 INFO: ------------------------------------------------------------------------
+11:48:45 06:18:45.633 ERROR: Error during SonarScanner execution
+11:48:45 org.sonar.java.AnalysisException: Your project contains .java files, please provide compiled classes with sonar.java.binaries property, or exclude them from the analysis with sonar.exclusions property.
+11:48:45 	at org.sonar.java.classpath.ClasspathForMain.init(ClasspathForMain.java:73)
+11:48:45 	at org.sonar.java.classpath.AbstractClasspath.getElements(AbstractClasspath.java:319)
+11:48:45 	at org.sonar.java.SonarComponents.getJavaClasspath(SonarComponents.java:206)
+11:48:45 	at org.sonar.java.JavaFrontend.<init>(JavaFrontend.java:95)
+11:48:45 	at org.sonar.plugins.java.JavaSensor.execute(JavaSensor.java:112)
+11:48:45 	at org.sonar.scanner.sensor.AbstractSensorWrapper.analyse(AbstractSensorWrapper.java:64)
+11:48:45 	at org.sonar.scanner.sensor.ModuleSensorsExecutor.execute(ModuleSensorsExecutor.java:88)
+11:48:45 	at org.sonar.scanner.sensor.ModuleSensorsExecutor.lambda$execute$1(ModuleSensorsExecutor.java:61)
+11:48:45 	at org.sonar.scanner.sensor.ModuleSensorsExecutor.withModuleStrategy(ModuleSensorsExecutor.java:79)
+11:48:45 	at org.sonar.scanner.sensor.ModuleSensorsExecutor.execute(ModuleSensorsExecutor.java:61)
+11:48:45 	at org.sonar.scanner.scan.SpringModuleScanContainer.doAfterStart(SpringModuleScanContainer.java:82)
+11:48:45 	at org.sonar.core.platform.SpringComponentContainer.startComponents(SpringComponentContainer.java:226)
+11:48:45 	at org.sonar.core.platform.SpringComponentContainer.execute(SpringComponentContainer.java:205)
+11:48:45 	at org.sonar.scanner.scan.SpringProjectScanContainer.scan(SpringProjectScanContainer.java:204)
+11:48:45 	at org.sonar.scanner.scan.SpringProjectScanContainer.scanRecursively(SpringProjectScanContainer.java:200)
+11:48:45 	at org.sonar.scanner.scan.SpringProjectScanContainer.doAfterStart(SpringProjectScanContainer.java:173)
+11:48:45 	at org.sonar.core.platform.SpringComponentContainer.startComponents(SpringComponentContainer.java:226)
+11:48:45 	at org.sonar.core.platform.SpringComponentContainer.execute(SpringComponentContainer.java:205)
+11:48:45 	at org.sonar.scanner.bootstrap.SpringScannerContainer.doAfterStart(SpringScannerContainer.java:351)
+11:48:45 	at org.sonar.core.platform.SpringComponentContainer.startComponents(SpringComponentContainer.java:226)
+11:48:45 	at org.sonar.core.platform.SpringComponentContainer.execute(SpringComponentContainer.java:205)
+11:48:45 	at org.sonar.scanner.bootstrap.SpringGlobalContainer.doAfterStart(SpringGlobalContainer.java:138)
+11:48:45 	at org.sonar.core.platform.SpringComponentContainer.startComponents(SpringComponentContainer.java:226)
+11:48:45 	at org.sonar.core.platform.SpringComponentContainer.execute(SpringComponentContainer.java:205)
+11:48:45 	at org.sonar.batch.bootstrapper.Batch.doExecute(Batch.java:71)
+11:48:45 	at org.sonar.batch.bootstrapper.Batch.execute(Batch.java:65)
+11:48:45 	at org.sonarsource.scanner.api.internal.batch.BatchIsolatedLauncher.execute(BatchIsolatedLauncher.java:46)
+11:48:45 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+11:48:45 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+11:48:45 	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+11:48:45 	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+11:48:45 	at org.sonarsource.scanner.api.internal.IsolatedLauncherProxy.invoke(IsolatedLauncherProxy.java:60)
+11:48:45 	at jdk.proxy1/jdk.proxy1.$Proxy0.execute(Unknown Source)
+11:48:45 	at org.sonarsource.scanner.api.EmbeddedScanner.doExecute(EmbeddedScanner.java:189)
+11:48:45 	at org.sonarsource.scanner.api.EmbeddedScanner.execute(EmbeddedScanner.java:138)
+11:48:45 	at org.sonarsource.scanner.cli.Main.execute(Main.java:126)
+11:48:45 	at org.sonarsource.scanner.cli.Main.execute(Main.java:81)
+11:48:45 	at org.sonarsource.scanner.cli.Main.main(Main.java:62)
+11:48:45 06:18:45.666 DEBUG: Cleanup org.eclipse.jgit.util.FS$FileStoreAttributes$$Lambda$300/0x00007f689027c200@75b21c3b during JVM shutdown
+11:48:46 WARN: Unable to locate 'report-task.txt' in the workspace. Did the SonarScanner succeed?
+11:48:46 ERROR: SonarQube scanner exited with non-zero code: 1
+11:48:46 [DeployPublisher][INFO] Build failed, project not deployed
+11:48:46 Finished: FAILURE
+~~~
+
+To summerise this was the error: 
+`org.sonar.java.AnalysisException: Your project contains .java files, please provide compiled classes with sonar.java.binaries property, or exclude them from the analysis with sonar.exclusions property.`
+
+This error occurs when the SonarQube scanner is unable to find the compiled Java classes (.class files) for the Java source files in your project. The scanner needs access to the compiled classes to perform static code analysis.
+
+to sovle this there are 2 ways: 
+
+1. If you have already compiled your Java code and have the .class files available, you can specify the location of these files using the sonar.java.binaries property. `sonar.java.binaries=target/classes` (Replace target/classes with your path if you have configured in a diffterent dir)
+
+or 
+
+2. Ensure that your Jenkins pipeline is compiling the Java code successfully before running the SonarQube scanner. If the compilation step fails, the scanner won't be able to find the compiled classes.
+
+I already had .class files compiled so 1. worked for me. 
+
+4. **Tomcat Error**
+
+Just when i thought everything is alright another error slammed on my face. 
+
++ I dont have log file for this one but error was no html page to view the project. Since my project is a pretty basic java hello-world project. i didnt have any html page to view that so i had to create one **but where??**
++ If you remember we created '/webapps' dir, which typically servers as the default deployment path for Tomcat installations. So our `index.html` should be in this folder.
+
+Index.html:
+
+~~~
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome dummy to my webpage </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding-top: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h1>dummy is working !</h1>
+    <p>This is a simple HTML page served by Tomcat.</p>
+    <p>Current Date and Time: <span id="datetime"></span></p>
+
+    <script>
+        function updateDateTime() {
+            const now = new Date();
+            const dateTimeString = now.toLocaleString();
+            document.getElementById("datetime").textContent = dateTimeString;
+        }
+
+        setInterval(updateDateTime, 1000);
+    </script>
+</body>
+</html>
+~~~
+
+![Screenshot 2024-05-30 130915](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/8a85122c-2f7e-4f7d-9bca-0db277c24da9)
+
+AND EVERYTHING WORKS !! 
+
+## Bonus
+
+You can do all this via shell commands too. just fun to try out!
+
+Jenkins --> + build item --> free style --> execute shell
+
+script 1:
+
+~~~
+echo "Cleaning workspace"
+rm -rf *
+ls -la
+~~~
+
+script 2:
+
+~~~
+echo "manual download"
+curl -u admin:qwerty1234 -O http://13.234.20.254:8081/repository/maven-snapshots/com/mycompany/app/my-app/1.2-SNAPSHOT/my-app-1.2-20240528.144737-1.war
+ls -la
+~~~
+
+Script 3:
+
+~~~
+echo "List all files after artifact download"
+ls -la
+
+echo "Deploying to Tomcat..."
+curl -u admin:admin123 -T my-app-1.2-20240528.144737-1.war "http://3.111.56.155:8080/manager/text/deploy?path=/myapp&update=true"
+~~~
+
+and then you can configure tomcat which will work with selected version of the build. 
+
+
+
+
+
+~~~
+You made it this far you learned alot congrats for that!!!
 
 This implementation is quite normal keep updated i will post the pipeline with docker 
+~~~
