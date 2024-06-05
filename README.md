@@ -1,4 +1,4 @@
-Well seeing the image below you might be wondering, how he end up in this position!!
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/9b9d6f5a-7eff-4e31-b61f-7a41c1b9b696)Well seeing the image below you might be wondering, how he end up in this position!!
 
 allow me to expalin. 
 
@@ -746,6 +746,332 @@ Jenkins is an open-source automation server that enables continuous integration 
 >> 5. **Open-Source and Community**: Being open-source, Jenkins benefits from a large and active community contributing plugins, documentation, and support, which helps organizations avoid vendor lock-in and reduce costs.
 
 
+For installation:
+
+lets update packages :  `sudo yum update –y`
+
+**Step 1:**
+
+Add the Jenkins repo:
+
+~~~
+sudo wget -O /etc/yum.repos.d/jenkins.repo \
+    https://pkg.jenkins.io/redhat-stable/jenkins.repo
+~~~
+
+**Step 2:**
+
+Import a key file from Jenkins-CI to enable installation from the package:
+
+~~~
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+sudo yum upgrade
+~~~
+
+**Step 3:**
+
+Install Java (Amazon Linux 2023):
+
+~~~
+sudo dnf install java-17-amazon-corretto -y
+~~~
+
+**Step 4:** 
+
+Install Jenkins:
+
+~~~
+sudo yum install jenkins -y
+~~~
+
+**Step 5:**
+
+Enable the Jenkins service to start at boot and Start Jenkins as a service:
+
+~~~
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+~~~
+
+
+You can check the status of the Jenkins service:
+
+~~~
+sudo systemctl status jenkins
+~~~
+
+
+you can access jenkins via http://<public_ip>:8080 from your browser. 
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/37974267-74be-4d4d-8538-d9c86833c13e)
+
+
+enter the password found in /var/lib/jenkins/secrets/initialAdminPassword
+
+~~~ 
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+~~~
+
+The Jenkins installation script directs you to the Customize Jenkins page. Click **Install suggested plugins**.
+
+Create **First Admin User** will open. Enter your information, and then select Save and Continue.
+
+For more info [check here](https://www.jenkins.io/doc/tutorials/tutorial-for-installing-jenkins-on-AWS/)
+
+
+## Tools configuration
+
+we are now done with installation part and lets move to configuring these apps. 
+
+
+### Maven to Nexus
+
+Maven requires the specification of repository details to deploy the artifacts generated during the package phase of the build process. This configuration is defined through the distributionManagement element, which allows Maven to locate the target repository where the packaged artifacts should be deployed.
+
+#### Changes in the pom.xml
+
+add this <distrubutionmanagment> tag in <projects> tag
+~~~
+<distributionManagement>
+	  <repository>
+		  <id>nexus-releases</id>
+		  <name>Nexus Release Repository</name>
+		  <url>http://13.234.20.254:8081/repository/maven-releases/</url>
+		  </repository>
+
+
+   	<snapshotRepository>
+     		 <id>nexus-snapshots</id>
+		 <url>http://13.234.20.254:8081/repository/maven-snapshots/</url>
+   	</snapshotRepository>
+</distributionManagement>
+~~~
+
+
+Nexus makes it easy to determine the URLs of its hosted repositories – each repository displays the exact entry to be added in the <distributionManagement> of the project pom, under the Summary tab.
+
+
+#### Changes in Plugins tag
+
+Maven handles the deployment mechanism via the `maven-deploy-plugin` – this mapped to the deployment phase of the default Maven lifecycle.
+
+~~~
+<plugin>
+         <artifactId>maven-deploy-plugin</artifactId>
+         <version>2.8.1</version>
+         <executions>
+            <execution>
+              <id>default-deploy</id>
+              <phase>deploy</phase>
+              <goals>
+                <goal>deploy</goal>
+              </goals>
+            </execution>
+          </executions>
+</plugin>
+~~~
+
+While the `maven-deploy-plugin` can handle the task of deploying project artifacts to Nexus, it does not fully leverage the advanced features offered by Nexus. To take advantage of Nexus's capabilities, such as staging functionality, Sonatype developed the `nexus-staging-maven-plugin`. This custom Nexus plugin is specifically designed to interact seamlessly with Nexus and harness its advanced functionalities.
+
+
+Despite the staging functionality not being a requirement for a simple deployment process, we will proceed with the `nexus-staging-maven-plugin`. This decision is driven by the plugin's purpose-built nature, ensuring optimal communication and integration with Nexus.
+
+add this <plugin> tag under <**plugins**> tag in pom.xml 
+
+~~~
+<plugin>
+          <groupId>org.sonatype.plugins</groupId>
+          <artifactId>nexus-staging-maven-plugin</artifactId>
+          <version>1.5.1</version>
+          <executions>
+            <execution>
+              <id>default-deploy</id>
+              <phase>deploy</phase>
+              <goals>
+                <goal>deploy</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <serverId>nexus</serverId>
+            <nexusUrl>http://13.234.20.254:8081/nexus/</nexusUrl>
+            <skipStaging>true</skipStaging>
+          </configuration>
+</plugin>
+~~~
+
+The deploy goal of the plugin is mapped to the deploy phase of the Maven build. Also notice that, as discussed, we do not need staging functionality in a simple deployment of -SNAPSHOT artifacts to Nexus, so that is fully disabled via the <skipStaging> element.
+
+
+#### Settings.xml 
+
+Deploying to Nexus is a secured operation, and a dedicated deployment user is provided by default on any Nexus instance for this purpose.
+
+Maven needs to be configured with this deployment user's credentials to interact properly with Nexus. However, these credentials cannot be placed in the project's `pom.xml` file because its syntax does not support this, and the `pom.xml` may be a public artifact, making it unsuitable for storing sensitive information.
+
+Instead, the server credentials must be defined in Maven's global `settings.xml` file.
+
+
+~~~
+ <servers>
+    <!-- server
+     | Specifies the authentication information to use when connecting to a particular server, identified by
+     | a unique name within the system (referred to by the 'id' attribute below).
+     |
+     | NOTE: You should either specify username/password OR privateKey/passphrase, since these pairings are
+     |       used together.
+    | -->
+    <server>
+      <id>nexus-releases</id>
+      <username>admin</username>
+      <password>qwerty1234</password>
+    </server>
+
+    <server>
+      <id>nexus-snapshots</id>
+      <username>admin</username>
+      <password>qwerty1234</password>
+    </server>
+
+    <!-- Another sample, using keys to authenticate.
+    <server>
+      <id>siteServer</id>
+      <privateKey>/path/to/private/key</privateKey>
+      <passphrase>optional; leave empty if not used.</passphrase>
+    </server>
+    -->
+  </servers>
+~~~
+
+Add your username and password as shown above. Make these changes in `settings.xlm` located in your installation folder. 
+
+now if you want to test it run this command where your pom.xlm is located. 
+
+~~~
+mvn clean deploy -Dmaven.test.skip=true
+~~~
+
+
+
+### Sonarqube configuration
+
+Sonarqube is used for static code analysis but where dooes that code comes from ? well if you are using Gitlab cicd then sonarqube fetchs data from maven/nexus repo. for that we need to make some changes in `pom.xml`
+
+add this under the existing <**plugins**> tag:
+
+~~~
+        <plugin>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>3.9.1.2184</version>
+        </plugin>
+~~~
+
+and then in your `.gitlab-ci.yml` add this: (it contains for all the applications if u want to try enjoy!)
+
+~~~
+variables:
+   MAVEN_OPTS: -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+   MAVEN_CLI_OPTS: "-s ./settings.xml --batch-mode"
+   # MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  
+  
+
+image: maven:latest
+  
+# maven:latest
+
+stages:
+    - build
+    - deploy
+    - sonarqube
+
+cache:
+  paths:
+    - .m2/repository
+    - target
+
+# sonarqube-check:
+#   stage: sonarqube  
+#   variables:
+#     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+#     GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+#   cache:
+#     key: "${CI_JOB_NAME}"
+#     paths:
+#       - .sonar/cache
+#   script: 
+#     - mvn verify sonar:sonar -Dsonar.projectKey=Sonar-maven
+#   allow_failure: true
+#   only:
+#     - main
+
+maven-build:
+  stage: build
+  script:
+    - 'mvn compile'
+    - 'mvn $MAVEN_OPTS package -Dmaven.test.skip=true'
+    - echo "Packaging the code"
+    # - 'mvn deploy'
+
+  artifacts: 
+   paths: 
+      - target/*.war 
+
+
+nexus-deploy:
+  stage: deploy
+  script:
+      - mvn $MAVEN_CLI_OPTS deploy -Dmaven.test.skip=true 
+      - echo "installing the package in local repository" 
+   #  - 'mvn deploy -DskipTests -DaltDeploymentRepository=nexus::default::$NEXUS_URL'
+    # - 'mvn $MAVEN_OPTS deploy -Dmaven.test.skip=true'
+
+
+
+  # environment:
+  #   name: nexus-deployment
+  # variables:
+  #   # MAVEN_SETTINGS_XML: "${CI_PROJECT_DIR}/settings.xml"
+  #   NEXUS_USER: "$NEXUS_USER"
+  #   NEXUS_PASS: "$NEXUS_PASS"
+  # dependencies:
+  #   - maven-build
+
+# tomcat-deploy:
+#   stage: deploy
+#   script:
+#     - 'curl --upload-file target/*.war "$TOMCAT_URL/manager/text/deploy?path=/app&update=true" -u $TOMCAT_USER:$TOMCAT_PASS'
+#   dependencies:
+#     - maven-build
+
+~~~
+
+> Now go to sonarqube application and click on new project and get your Access token then in the next step it will give a command to run where your maven and nexus is configured. 
+
+
+### Configuration of Jenkines 
+
+Now we have to integrate everything we have donw with Jenkins.
+
+#### Download required plugins 
+
+Before we go start with building pipeline we need to install a few plugins. I will provide the list here check out that. 
+
+1. deploy to container
+2. Maven Integration plugin
+3. Nexus Artifact Uploader
+4. SonarQube Scanner for Jenkins
+5. Git plugin
+6. GitHub API Plugin
+7. GitLab API Plugin
+8. GitHub plugin
+9. GitLab Authentication plugin
+10. GitLab Plugin
+
+So, here i mentioned both gitlab and github plugins you can install the one which u will be using for this project. 
+
+ACCESS TOKENS GITLAB AND HUB
 
 
 
@@ -754,13 +1080,156 @@ Jenkins is an open-source automation server that enables continuous integration 
 
 
 
+#### Setup Credentials  
+
+In your Jenkins, open Manage Jenkins > System > Global credentials domain
 
 
+![Screenshot 2024-06-04 180206](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/eb59ef55-9336-4376-9894-581da60fe06f)
+
+Don't go for add new domain. 
+
+![Screenshot 2024-06-04 180617](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/dc51eee3-0b0f-4590-9b4e-246b13589405)
+
+Click on ` + add credentails`
+
+![Screenshot 2024-06-04 180844](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/b067ba25-caa5-4d86-89f2-5802b4cec7d5)
+
+
+Add name to it and then add your access token. 
+
+Do the same thing for username and password / access tokens for all the applications we configured. this step is important as this will allow jenkins to access those application and take required action. 
+
+
+![Screenshot 2024-06-04 173508](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/e089a576-42ff-459d-88d3-7127a79a6dea)
+
+
+and just like that you have added all your credentials to jenkins!!
+
+
+#### Jenkins Tools Configuration 
+
+The plan of integrate jenkines with other applications translates here by configuring tools here, which inturn install them in your VM to run all the commands such as `mvn clean deploy` . 
+
+Go to dashboard > Manage Jenkins > Tools 
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/1904c598-b083-44bf-9903-4199d20624ee)
+
+Here we Maven Configuration, select default/Global configuration for maven. if we scroll along we will see JDBC setting here you will enter Postgress url if port configuration is unaltered then its  http:// <public_IP>:5432 (include context path if there is any), and select JDBC credentials from drop down menu. 
+
+
+if we scroll down we will see JDK and GIT installation select as shown in the figure: 
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/5e198919-d72d-4449-a6f0-1f2776ff6f59)
+
+In a similar fashion select sonarqube:  
+
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/1214b764-b22a-4914-b1ed-a6ae059eb298)
+
+
+and maven:
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/6cfc2d61-cf23-4ad7-82c2-9bbf53f49182)
+
+
+if we click on add installer we will notice other ways to install our application, if you wish to proceed with any specific version you want, you can do that here.
+
+
+
+## Pipeline Setup
+
+Fom jenkins dashboard click on `+ build item` then you see this screen :
+
+
+![Screenshot 2024-06-04 173231](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/ca6fc0dc-d555-492d-98b4-4bb37c8e80ac)
+
+
+now select maven project and then click ok. you will see this screen:
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/e629282b-76e6-40c4-85d0-40b46bef96cc)
+
+
+on the left hand side you will see these sections:
+
+1. **General**: Configures basic project details and general settings.
+2. **Source Code Management**: Defines where and how to retrieve the source code.
+3. **Build Triggers**: Specifies conditions that initiate the build process.
+4. **Build Environment**: Sets up the environment before the build starts.
+5. **Pre Steps**: Executes tasks before the main build steps.
+6. **Build**: Contains the primary steps to compile, test, and package the code.
+7. **Post Steps**: Executes tasks immediately after the build steps.
+8. **Build Settings**: Provides additional configurations for the build process.
+9. **Post-build Actions**: Defines actions to perform after the build is completed, like notifications or deployments.
+
+
+if scroll down in general section you will notice `GitLab Connection` (i was using gitlab) select drop down versin and selct your gitlab/github account name (it will be the same name which u have given for your access token).
+
+
+If you want jenkins to pick changes from Github/lab you need to fill up Source code management section and fill up the details as shown in the below image.  
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/73f40d09-bba3-42a4-ac12-cacf4494fc71)
+
+These are some Build triggers i have set pretty much self explonatory. 
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/b9114f7e-9810-4f0a-9019-55d09441dbc4)
+
+
+now in pre-build section we will these option: 
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/80c24cc9-03fb-4ddf-8e33-9741213458f6)
+
+select execute sonarqube: 
+
+Select the JDK version as configured previously.
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/b0792cf8-b15d-4f30-90a0-b0b18c48a6b9)
+
+Coming to analysis proerties, which allows to pass some configuration parameters to SonarQube.
+
+> Parameters defined here take precedence over the ones potentially defined in the specified sonar-project.properties file. It is even possible to specify all SonarQube parameters here and leave the "Path to project properties" input field empty.
+
+so i have defined: 
+
+~~~
+sonar.projectKey=sonar_jenkins
+sonar.projectName=sonar_jenkins
+sonar.projectVersion=1.0
+sonar.sources=src/main/java
+sonar.java.binaries=target/classes
+~~~
+
+i will explain how i got path for `sonar.java.binaries=target/classes` (which might not be the same for everyone) in debugging section. 
+
++ i have selected additional parameters as `-X` which means debugging more it helps to solve error if you happen to find any.
++ I am not showing nexus part its up to you configure in such a way that, when you puch code it uploads a file to nexus repo.
+
+IN build setting you can configure your email. 
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/5bfd98f9-59d9-4879-b3b0-739921d70a74)
+
+
+In post build actions :
+
+![image](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/17215124-6d1c-4c08-b22e-4a1d1f0df17d)
+
+**execute pipeline and check:**
+
+> http://<TOMCAT_SERVER_IP>:8080/yourContextPath(mywebauto)
+
+ ![Screenshot 2024-05-28 224907](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/f60a85ed-58fa-4f97-826c-c6f7dfb7d767)
+
+
+you will see your app running,
+
+if you wish to check more about code (static analysis) 
+
+visit: http://<SONARQUBE_SERVER_IP>:9000
+
+![Screenshot 2024-05-30 125904](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/b62e76a7-1722-4539-8aef-2ded33df13a2)
+
+similarly check for nexus repo:
+
+![Screenshot 2024-05-31 111750](https://github.com/SomeshRao007/java-devops-pipeline/assets/111784343/d15c089a-ada1-4cc4-8a66-b588a34fb2f4)
 
 
 This implementation is quite normal keep updated i will post the pipeline with docker 
-
-
-
-
-
