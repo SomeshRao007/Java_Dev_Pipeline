@@ -27,7 +27,7 @@ We are using 5 tools mainly and for easy of this tutorial i will showing you how
 + Port conflict, some application use same port either (for example 8080).
 + Conflict with interdependencies. 
 
-[Maven](https://github.com/SomeshRao007/Java_Dev_Pipeline/edit/main/README.md#1-maven-installation)
+[Maven](https://github.com/SomeshRao007/Java_Dev_Pipeline/main/README.md#1-maven-installation)
 
 [Nexus](https://github.com/SomeshRao007/Java_Dev_Pipeline/edit/main/README.md#2-nexus-installation)
 
