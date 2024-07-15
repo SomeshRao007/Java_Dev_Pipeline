@@ -27,15 +27,15 @@ We are using 5 tools mainly and for easy of this tutorial i will showing you how
 + Port conflict, some application use same port either (for example 8080).
 + Conflict with interdependencies. 
 
-[Maven](https://github.com/SomeshRao007/Java_Dev_Pipeline/main/README.md#1-maven-installation)
+[Maven](https://github.com/SomeshRao007/Java_Dev_Pipeline/blob/main/README.md#1-maven-installation)
 
-[Nexus](https://github.com/SomeshRao007/Java_Dev_Pipeline/edit/main/README.md#2-nexus-installation)
+[Nexus](https://github.com/SomeshRao007/Java_Dev_Pipeline/blob/main/README.md#2-nexus-installation)
 
-[SonarQube](https://github.com/SomeshRao007/Java_Dev_Pipeline/edit/main/README.md#3-sonarqube-installation)
+[SonarQube](https://github.com/SomeshRao007/Java_Dev_Pipeline/blob/main/README.md#3-sonarqube-installation)
 
-[Tomcat](https://github.com/SomeshRao007/Java_Dev_Pipeline/edit/main/README.md#4-tomcat-installation)
+[Tomcat](https://github.com/SomeshRao007/Java_Dev_Pipeline/blob/main/README.md#4-tomcat-installation)
 
-[Jenkins](https://github.com/SomeshRao007/Java_Dev_Pipeline/edit/main/README.md#5-jenkins-installation)
+[Jenkins](https://github.com/SomeshRao007/Java_Dev_Pipeline/blob/main/README.md#5-jenkins-installation)
 
 So, I am using multiple VM's to manage each application, one for Maven and nexus repository, one for sonar, one for tomcat and lastly one for jenkinns. 
 
